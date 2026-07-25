@@ -1,0 +1,57 @@
+# ============================================================
+# Crypto Analytics Platform — .gitignore
+# ============================================================
+
+# --- Python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*.so
+build/
+dist/
+*.egg-info/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# --- Secrets & Environment ---
+.env
+.env.local
+secrets/
+*_credentials.json
+service_account*.json
+
+# --- Terraform ---
+.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+.terraform.lock.hcl
+terraform.tfvars
+*.auto.tfvars
+
+# --- GCP ---
+application_default_credentials.json
+
+# --- Airflow ---
+airflow.cfg
+airflow.db
+logs/
+standalone_admin_password.txt
+
+# --- IDE ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# --- Data (no commitear datos raw) ---
+data/
+*.parquet
+*.csv
+*.json.gz
