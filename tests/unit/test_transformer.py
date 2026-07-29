@@ -26,6 +26,13 @@ def test_transform_creates_dataframe():
     assert df["coin_id"][0] == "bitcoin"
     assert df["current_price"][0] == 60000.0
 
+    # Verify indicator columns are present
+    expected_columns = ["macd", "macd_signal", "bb_upper", "bb_lower", "rsi_14"]
+    for col in expected_columns:
+        assert col in df.columns
+        # With only 1 record, indicator values should be null (None in Python, null in Polars)
+        assert df[col][0] is None
+
 
 def test_transform_empty_list():
     transformer = PriceTransformer()
@@ -34,3 +41,8 @@ def test_transform_empty_list():
     assert isinstance(df, pl.DataFrame)
     assert df.height == 0
     assert "coin_id" in df.columns
+
+    # Verify indicator columns are present even when empty
+    expected_columns = ["macd", "macd_signal", "bb_upper", "bb_lower", "rsi_14"]
+    for col in expected_columns:
+        assert col in df.columns
