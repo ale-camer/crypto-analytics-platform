@@ -1,48 +1,48 @@
-# Arquitectura del Sistema — Crypto Analytics Platform
+# System Architecture — Crypto Analytics Platform
 
-Este documento registra el diseño arquitectónico, decisiones técnicas y la estructura de componentes del pipeline de analítica de criptomonedas.
+This document records the architectural design, technical decisions, and component structure of the cryptocurrency analytics pipeline.
 
 ---
 
-## 1. Capa de Extracción y Modelos de Datos
+## 1. Extraction Layer and Data Models
 
-### 1.1 Extractor HTTP (`src/extractors/coingecko.py`)
-La capa de extracción es responsable de consultar la API REST pública de CoinGecko y obtener métricas de mercado en tiempo real.
+### 1.1 HTTP Extractor (`src/extractors/coingecko.py`)
+The extraction layer is responsible for querying the public CoinGecko REST API and obtaining real-time market metrics.
 
-* **Cliente**: Se utiliza `httpx.Client` para realizar peticiones HTTP de forma limpia y configurable.
+* **Client**: `httpx.Client` is used to make HTTP requests in a clean and configurable way.
 * **Endpoint**: `GET /api/v3/coins/markets`
-* **Parámetros**:
-  * `vs_currency`: Moneda de referencia (por defecto `"usd"`).
-  * `ids`: Lista de identificadores de criptomonedas separados por comas (ej. `"bitcoin,ethereum"`).
-* **Headers**: Se envía un `User-Agent` personalizado (`crypto-analytics-platform/0.1.0`) para evitar bloqueos por rate-limiting básico.
-* **Resiliencia**: Captura de excepciones HTTP mediante `response.raise_for_status()`.
+* **Parameters**:
+  * `vs_currency`: Reference currency (default `"usd"`).
+  * `ids`: Comma-separated list of cryptocurrency identifiers (e.g., `"bitcoin,ethereum"`).
+* **Headers**: A custom `User-Agent` (`crypto-analytics-platform/0.1.0`) is sent to avoid blocks due to basic rate-limiting.
+* **Resilience**: HTTP exceptions are captured using `response.raise_for_status()`.
 
-### 1.2 Modelo de Validación (`src/models/price_record.py`)
-Garantiza la integridad de los datos extraídos antes de ser procesados por las capas subsecuentes del pipeline.
+### 1.2 Validation Model (`src/models/price_record.py`)
+Guarantees the integrity of the extracted data before being processed by subsequent layers of the pipeline.
 
-* **Librería**: `pydantic` (v2).
-* **Esquema**:
-  * `coin_id` (`str`): Identificador único del activo (ej: `"bitcoin"`).
-  * `symbol` (`str`): Símbolo de cotización en minúsculas (ej: `"btc"`).
-  * `name` (`str`): Nombre completo del activo.
-  * `current_price` (`float`): Precio actual en la moneda de referencia.
-  * `market_cap` (`float`): Capitalización de mercado.
-  * `total_volume` (`float`): Volumen total negociado en 24h.
-  * `price_change_24h` (`float | None`): Variación porcentual en 24 horas (campo opcional/nulo).
-  * `fetched_at` (`datetime`): Estampa de tiempo exacta de la extracción (en zona horaria UTC).
+* **Library**: `pydantic` (v2).
+* **Schema**:
+  * `coin_id` (`str`): Unique asset identifier (e.g., `"bitcoin"`).
+  * `symbol` (`str`): Lowercase ticker symbol (e.g., `"btc"`).
+  * `name` (`str`): Full asset name.
+  * `current_price` (`float`): Current price in the reference currency.
+  * `market_cap` (`float`): Market capitalization.
+  * `total_volume` (`float`): Total volume traded in 24h.
+  * `price_change_24h` (`float | None`): 24-hour percentage variation (optional/nullable field).
+  * `fetched_at` (`datetime`): Exact timestamp of the extraction (in UTC timezone).
 
 ---
 
-## 2. Registro de Decisiones de Arquitectura (ADRs)
+## 2. Architectural Decision Records (ADRs)
 
-### ADR-001: Selección de Client HTTP Síncrono (`httpx`)
-* **Estado**: Aprobado.
-* **Contexto**: Se requiere extraer datos periódicamente desde Airflow.
-* **Decisión**: Usar `httpx.Client` síncrono en lugar de `asyncio`/`aiohttp`.
-* **Consecuencias**: Simplifica el código de extracción dentro de los operadores de Airflow sin añadir sobrecarga de event loops asíncronos para peticiones batch pequeñas.
+### ADR-001: Selection of Synchronous HTTP Client (`httpx`)
+* **Status**: Approved.
+* **Context**: Data needs to be extracted periodically from Airflow.
+* **Decision**: Use synchronous `httpx.Client` instead of `asyncio`/`aiohttp`.
+* **Consequences**: Simplifies extraction code within Airflow operators without adding the overhead of asynchronous event loops for small batch requests.
 
-### ADR-002: Validación Estricta de Esquemas con Pydantic v2
-* **Estado**: Aprobado.
-* **Contexto**: Los datos de APIs externas pueden cambiar o contener nulos inesperados.
-* **Decisión**: Mapear la respuesta JSON inmediatamente a modelos Pydantic `PriceRecord`.
-* **Consecuencias**: Evita la propagación de datos corruptos a las capas de transformación y almacenamiento (BigQuery/GCS).
+### ADR-002: Strict Schema Validation with Pydantic v2
+* **Status**: Approved.
+* **Context**: External API data can change or contain unexpected nulls.
+* **Decision**: Map the JSON response immediately to Pydantic `PriceRecord` models.
+* **Consequences**: Prevents propagation of corrupt data to the transformation and storage layers (BigQuery/GCS).

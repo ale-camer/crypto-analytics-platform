@@ -1,56 +1,56 @@
-# Issue #0: Setup Inicial & Scaffolding Base
+# Issue #0: Initial Setup & Base Scaffolding
 
-**Tipo**: `chore`  
-**Rama**: `feature/day-0-setup`  
-**Fecha de inicio**: 2026-07-25  
-**Regla**: Día 0 = SOLO scaffolding. Sin código de negocio.
+**Type**: `chore`  
+**Branch**: `feature/day-0-setup`  
+**Start Date**: 2026-07-25  
+**Rule**: Day 0 = Scaffolding ONLY. No business code.
 
 ---
 
 ## Checklist
 
-### 🌿 Git & Ramas
-- [x] `git init` en el directorio del proyecto
-- [x] Commit inicial vacío en `main`: `"chore: initial empty commit"`
+### 🌿 Git & Branches
+- [x] `git init` in the project directory
+- [x] Initial empty commit on `main`: `"chore: initial empty commit"`
 - [x] `git checkout -b feature/day-0-setup`
-- [ ] Crear repo en GitHub (público: `crypto-analytics-platform`)
+- [ ] Create repository on GitHub (public: `crypto-analytics-platform`)
 - [ ] `git remote add origin <url>` + `git push -u origin feature/day-0-setup`
 
-**Verificación**:
+**Verification**:
 ```bash
 git branch          # → * feature/day-0-setup
-git log --oneline   # → commit inicial visible
+git log --oneline   # → initial commit visible
 ```
 
 ---
 
-### 🐍 Entorno Virtual
+### 🐍 Virtual Environment
 - [x] `python3 -m venv .venv`
 - [ ] `source .venv/bin/activate`
 - [ ] `pip install -e ".[dev]"` (pytest, ruff, python-dotenv)
-- [ ] Verificar activación: `python --version`
+- [ ] Verify activation: `python --version`
 
-**Verificación**:
+**Verification**:
 ```bash
-which python   # → debe apuntar a .venv/bin/python
+which python   # → should point to .venv/bin/python
 ```
 
 ---
 
-### 📄 Archivos de Configuración
-- [x] `.gitignore` (excluye: `.venv/`, `.env`, `__pycache__/`, `.terraform/`)
-- [x] `.env.example` (template de variables, sin valores reales)
-- [x] `pyproject.toml` (metadata + deps vacías + config de herramientas)
+### 📄 Configuration Files
+- [x] `.gitignore` (excludes: `.venv/`, `.env`, `__pycache__/`, `.terraform/`)
+- [x] `.env.example` (variables template, no real values)
+- [x] `pyproject.toml` (metadata + empty deps + tools config)
 
-**Verificación**:
+**Verification**:
 ```bash
-git status   # → .venv/ NO debe aparecer como untracked
+git status   # → .venv/ MUST NOT appear as untracked
 cat .gitignore | grep .venv
 ```
 
 ---
 
-### 📁 Estructura de Directorios (solo vacíos con .gitkeep)
+### 📁 Directory Structure (empty with .gitkeep only)
 - [x] `src/extractors/.gitkeep`
 - [x] `src/transformers/.gitkeep`
 - [x] `src/loaders/.gitkeep`
@@ -64,38 +64,38 @@ cat .gitignore | grep .venv
 
 ---
 
-### 📚 Documentación
-- [x] `README.md` — borrador con arquitectura propuesta y roadmap de issues
-- [ ] `docs/architecture.md` — diagrama y descripción de capas (borrador)
-- [x] `docs/issue_0_setup.md` — este archivo
+### 📚 Documentation
+- [x] `README.md` — draft with proposed architecture and issues roadmap
+- [ ] `docs/architecture.md` — layers diagram and description (draft)
+- [x] `docs/issue_0_setup.md` — this file
 
 ---
 
-### ✅ Verificación Final
-- [ ] `git status` — solo archivos de scaffolding, sin código de negocio
-- [ ] `.venv/` NO aparece en `git status`
-- [ ] Todos los directorios bajo `src/` están vacíos (solo `.gitkeep`)
-- [ ] `find src/ -name "*.py"` → ningún resultado
+### ✅ Final Verification
+- [ ] `git status` — only scaffolding files, no business code
+- [ ] `.venv/` DOES NOT appear in `git status`
+- [ ] All directories under `src/` are empty (only `.gitkeep`)
+- [ ] `find src/ -name "*.py"` → no results
 
 ---
 
-### 🚀 Commit de Cierre del Issue #0
+### 🚀 Issue #0 Closure Commit
 - [ ] `git add .`
 - [ ] `git commit -m "chore: project scaffolding"`
 - [ ] `git push origin feature/day-0-setup`
-- [ ] Crear PR en GitHub: `feature/day-0-setup` → `main`
+- [ ] Create PR on GitHub: `feature/day-0-setup` → `main`
 
 ---
 
-## Issues Siguientes Definidos
+## Defined Following Issues
 
-| Issue | Título | Contenido |
-|-------|--------|-----------|
-| #1 | Extractor CoinGecko + modelos Pydantic | `src/extractors/`, `src/models/` |
-| #2 | Transformaciones Polars | `src/transformers/` |
+| Issue | Title | Content |
+|-------|-------|---------|
+| #1 | CoinGecko Extractor + Pydantic models | `src/extractors/`, `src/models/` |
+| #2 | Polars Transformations | `src/transformers/` |
 | #3 | BigQuery Loader + Terraform | `src/loaders/bigquery_loader.py`, `infra/` |
-| #4 | DAG Airflow completo | `dags/crypto_daily_pipeline.py` |
-| #5 | GCS Archive resiliente | `src/loaders/gcs_loader.py` |
+| #4 | Complete Airflow DAG | `dags/crypto_daily_pipeline.py` |
+| #5 | Resilient GCS Archive | `src/loaders/gcs_loader.py` |
 
 ---
 

@@ -1,13 +1,13 @@
-# Issue #2: Transformer con Polars
+# Issue #2: Polars Transformer
 
-**Rama**: `feature/issue-2-polars-transformer` (basada en `develop`)
-**Objetivo**: Implementar un transformador de datos usando Polars que reciba una lista de `PriceRecord` y la convierta en un `DataFrame` limpio y enriquecido.
+**Branch**: `feature/issue-2-polars-transformer` (based on `develop`)
+**Objective**: Implement a data transformer using Polars that takes a list of `PriceRecord`s and converts it into a clean and enriched `DataFrame`.
 
 ---
 
-## Paso 1 — Crear la rama desde develop
+## Step 1 — Create the branch from develop
 
-Como trabajaremos sobre `develop`, asegúrate de estar en esa rama y actualizada antes de ramificar:
+Since we are working on `develop`, make sure to be on that branch and updated before branching:
 
 ```bash
 git checkout develop
@@ -17,13 +17,13 @@ git checkout -b feature/issue-2-polars-transformer
 
 ---
 
-## Paso 2 — Agregar dependencias al `pyproject.toml`
+## Step 2 — Add dependencies to `pyproject.toml`
 
-Abrir `pyproject.toml` y agregar `polars` a la sección `[project]`:
+Open `pyproject.toml` and add `polars` to the `[project]` section:
 
 ```toml
 [project]
-# ... (mantener lo anterior) ...
+# ... (keep previous content) ...
 dependencies = [
     "httpx>=0.27",
     "pydantic>=2.0",
@@ -31,13 +31,13 @@ dependencies = [
 ]
 ```
 
-Luego, instalar la nueva dependencia en el entorno:
+Then, install the new dependency in the environment:
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-**Verificación**:
+**Verification**:
 ```bash
 python -c "import polars; print('Polars OK')"
 # → Polars OK
@@ -45,18 +45,18 @@ python -c "import polars; print('Polars OK')"
 
 ---
 
-## Paso 3 — Crear el transformador `PriceTransformer`
+## Step 3 — Create the `PriceTransformer`
 
-Archivo: `src/transformers/price_transformer.py`
+File: `src/transformers/price_transformer.py`
 
-Crea la clase `PriceTransformer` con un método `transform(self, records: list[PriceRecord]) -> pl.DataFrame`.
+Create the `PriceTransformer` class with a `transform(self, records: list[PriceRecord]) -> pl.DataFrame` method.
 
-El método debe:
-1. Convertir la lista de objetos `PriceRecord` (modelos Pydantic) a diccionarios usando `[r.model_dump() for r in records]`.
-2. Crear un `pl.DataFrame` de Polars con esos diccionarios.
-3. (Opcional/Recomendado) Asegurar que los tipos de datos en el DataFrame sean correctos (ej: que `fetched_at` sea Datetime).
+The method must:
+1. Convert the list of `PriceRecord` objects (Pydantic models) to dictionaries using `[r.model_dump() for r in records]`.
+2. Create a Polars `pl.DataFrame` with those dictionaries.
+3. (Optional/Recommended) Ensure correct data types in the DataFrame (e.g. `fetched_at` should be Datetime).
 
-**Verificación**:
+**Verification**:
 ```bash
 python -c "
 import polars as pl
@@ -68,37 +68,37 @@ r = PriceRecord(coin_id='bitcoin', symbol='btc', name='Bitcoin', current_price=6
 df = PriceTransformer().transform([r])
 print(df)
 "
-# → Debería imprimir el DataFrame de Polars mostrando 1 fila con los datos de Bitcoin.
+# → Should print the Polars DataFrame showing 1 row with Bitcoin data.
 ```
 
 ---
 
-## Paso 4 — Escribir los tests unitarios
+## Step 4 — Write unit tests
 
-Archivo: `tests/unit/test_transformer.py`
+File: `tests/unit/test_transformer.py`
 
-Crear tests que validen el comportamiento de `PriceTransformer`:
-- `test_transform_creates_dataframe`: Verifica que si pasas una lista válida de `PriceRecord`, devuelve un `pl.DataFrame`.
-- `test_transform_empty_list`: Verifica cómo se comporta al pasar una lista vacía `[]` (debería retornar un DataFrame vacío con el esquema correcto o manejarlo sin errores).
+Create tests that validate the behavior of `PriceTransformer`:
+- `test_transform_creates_dataframe`: Verify that passing a valid list of `PriceRecord`s returns a `pl.DataFrame`.
+- `test_transform_empty_list`: Verify how it behaves when passing an empty list `[]` (it should return an empty DataFrame with the correct schema or handle it without errors).
 
-**Verificación**:
+**Verification**:
 ```bash
 pytest tests/unit/test_transformer.py -v
-# → Deberían pasar los tests
+# → Tests should pass
 ```
 
 ---
 
-## Paso 5 — Lint y formato
+## Step 5 — Lint and format
 
-Asegúrate de que el código cumple con los estándares del proyecto:
+Ensure the code complies with the project standards:
 
 ```bash
 ruff check src/transformers/ tests/unit/test_transformer.py --fix
 ruff format src/transformers/ tests/unit/test_transformer.py
 ```
 
-**Verificación**:
+**Verification**:
 ```bash
 ruff check src/ tests/
 # → All checks passed.
@@ -106,7 +106,7 @@ ruff check src/ tests/
 
 ---
 
-## Paso 6 — Commit y push
+## Step 6 — Commit and push
 
 ```bash
 git add pyproject.toml src/transformers/price_transformer.py tests/unit/test_transformer.py docs/issue_2_polars_transformer.md
@@ -116,25 +116,25 @@ git push origin feature/issue-2-polars-transformer
 
 ---
 
-## Paso 7 — Crear el PR hacia develop
+## Step 7 — Create the PR to develop
 
-Recuerda que ahora apuntamos a `develop` como base:
+Remember that we now target `develop` as the base:
 
 ```bash
 gh pr create \
-  --title "feat: Issue #2 — Transformer con Polars" \
-  --body "Closes #2. Implementa PriceTransformer usando Polars para procesar listas de PriceRecord." \
+  --title "feat: Issue #2 — Polars Transformer" \
+  --body "Closes #2. Implements PriceTransformer using Polars to process lists of PriceRecord." \
   --base develop \
   --head feature/issue-2-polars-transformer
 ```
 
-Una vez revisado (y con CI en verde si hubiera), lo mergeas:
+Once reviewed (and with green CI if any), merge it:
 
 ```bash
 gh pr merge <N> --squash --delete-branch
 ```
 
-Y finalmente actualizas tu `develop` local:
+And finally update your local `develop`:
 
 ```bash
 git checkout develop
