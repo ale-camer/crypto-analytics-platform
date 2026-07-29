@@ -33,7 +33,21 @@ Guarantees the integrity of the extracted data before being processed by subsequ
 
 ---
 
-## 2. Architectural Decision Records (ADRs)
+## 2. Transformation Layer
+
+### 2.1 Polars Transformer (`src/transformers/price_transformer.py`)
+Converts validated `PriceRecord` instances into structured analytical DataFrames.
+
+* **Engine**: Polars (used for high-performance, memory-efficient data processing).
+* **Technical Indicators**: Calculates indicators using native Polars expressions (`ewm_mean`, `rolling_mean`, `rolling_std`).
+  * `macd` & `macd_signal`
+  * `bb_upper` & `bb_lower` (Bollinger Bands)
+  * `rsi_14`
+* **Handling Missing Data**: Gracefully handles missing historical data (yielding nulls) without crashing the pipeline when only a few records exist.
+
+---
+
+## 3. Architectural Decision Records (ADRs)
 
 ### ADR-001: Selection of Synchronous HTTP Client (`httpx`)
 * **Status**: Approved.
@@ -46,3 +60,9 @@ Guarantees the integrity of the extracted data before being processed by subsequ
 * **Context**: External API data can change or contain unexpected nulls.
 * **Decision**: Map the JSON response immediately to Pydantic `PriceRecord` models.
 * **Consequences**: Prevents propagation of corrupt data to the transformation and storage layers (BigQuery/GCS).
+
+### ADR-003: Selection of Polars over Pandas for Data Transformation
+* **Status**: Approved.
+* **Context**: The pipeline requires high-speed calculations for technical indicators across multiple cryptocurrency time-series.
+* **Decision**: Adopt Polars due to its Rust-based engine, multi-threading capabilities, and strict schema enforcement.
+* **Consequences**: Significantly faster execution times and lower memory footprint compared to Pandas, but requires adopting the Polars Expression API syntax.
