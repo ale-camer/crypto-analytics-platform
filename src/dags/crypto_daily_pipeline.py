@@ -46,15 +46,28 @@ def crypto_pipeline():
     @task
     def load_raw_to_gcs(raw_data: list[dict]):
         """Saves the raw JSON payload to a GCS bucket."""
+        import logging
+
+        logger = logging.getLogger("airflow.task")
+
         project_id = os.environ.get("GCP_PROJECT_ID")
         bucket_name = f"{project_id}-crypto-raw-archive"
-        loader = GCSLoader(bucket_name=bucket_name)
+
+        # Instantiate with both required arguments
+        loader = GCSLoader(bucket_name=bucket_name, project_id=project_id)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         blob_name = f"raw_market_data_{timestamp}.json"
 
-        # Ensure your GCSLoader has a method to load raw python objects/dicts
-        loader.load_json(raw_data, destination_blob_name=blob_name)
+        success = loader.load_json(raw_data, destination_blob_name=blob_name)
+
+        if not success:
+            logger.warning(
+                "GCS Archive upload failed (resilient fallback triggered). "
+                "The pipeline will continue with the BigQuery load."
+            )
+        else:
+            logger.info("Successfully archived raw data to GCS.")
 
     @task
     def transform_market_data(raw_data: list[dict]):
