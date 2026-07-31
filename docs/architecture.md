@@ -47,7 +47,36 @@ Converts validated `PriceRecord` instances into structured analytical DataFrames
 
 ---
 
-## 3. Architectural Decision Records (ADRs)
+## 3. Storage and Data Warehouse Layer
+
+### 3.1 BigQuery Analytics (`src/loaders/bigquery_loader.py`)
+The final destination for all transformed analytical records.
+
+* **Mode**: Upsert (Update/Insert) based on the asset ID and timestamp to prevent duplicate records.
+* **Schema Evolution**: Handled externally via Terraform IaC (`infra/`).
+* **Format**: Polars DataFrames are converted natively via PyArrow before being loaded into BigQuery for maximum I/O performance.
+
+### 3.2 GCS Fallback Archive (`src/loaders/gcs_loader.py`)
+An immutable raw data lake storing the exact JSON payloads obtained from the Extractors.
+
+* **Resilience**: Designed to **never** raise exceptions on failure (network issues, missing credentials, bucket absence). Instead, it logs a warning via the Airflow logger and returns a boolean status, allowing the downstream BigQuery analytical load to continue unharmed.
+
+---
+
+## 4. Orchestration Layer (Apache Airflow)
+
+### 4.1 Daily Pipeline DAG (`src/dags/crypto_daily_pipeline.py`)
+* **Framework**: Airflow 3.x using the modern **TaskFlow API** (`@task` decorators).
+* **State Management**: Uses native **XComs** implicitly to pass data between the extraction, GCS loading, and transformation layers.
+* **Topology**:
+  1. `extract_market_data`
+  2. `load_raw_to_gcs` (Resilient branch)
+  3. `transform_market_data`
+  4. `load_transformed_to_bigquery`
+
+---
+
+## 5. Architectural Decision Records (ADRs)
 
 ### ADR-001: Selection of Synchronous HTTP Client (`httpx`)
 * **Status**: Approved.
@@ -66,3 +95,13 @@ Converts validated `PriceRecord` instances into structured analytical DataFrames
 * **Context**: The pipeline requires high-speed calculations for technical indicators across multiple cryptocurrency time-series.
 * **Decision**: Adopt Polars due to its Rust-based engine, multi-threading capabilities, and strict schema enforcement.
 * **Consequences**: Significantly faster execution times and lower memory footprint compared to Pandas, but requires adopting the Polars Expression API syntax.
+
+### ADR-004: TaskFlow API and XComs for Data Passing
+* **Status**: Approved.
+* **Context**: Passing large amounts of data between tasks was traditionally an anti-pattern in Airflow.
+* **Decision**: Use Airflow's TaskFlow API to implicitly pass dictionaries between `extract` and `transform` tasks.
+* **Consequences**: Simplifies DAG syntax drastically compared to classic `PythonOperator`. Since our crypto payloads are small (<1MB JSONs), default XCom limits are not a bottleneck.
+
+### ADR-005: Optional Resiliency for GCS Archive
+* **Status**: Approved.
+* **Decision**: The GCS raw archive is a "nice-to-have" historical backup, while BigQuery is the critical path. Therefore, `GCSLoader` must catch all exceptions and degrade gracefully instead of failing the DAG run.
