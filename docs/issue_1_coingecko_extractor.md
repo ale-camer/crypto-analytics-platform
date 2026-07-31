@@ -1,27 +1,29 @@
-# Issue #1: Extractor CoinGecko + Modelos Pydantic
+# Issue #1: CoinGecko Extractor + Pydantic Models
 
-**Rama**: `feature/issue-1-coingecko-extractor`  
-**Objetivo**: Implementar el cliente HTTP contra la API de CoinGecko y los modelos Pydantic que validan la respuesta.
+**Branch**: `feature/issue-1-coingecko-extractor`  
+**Objective**: Implement the HTTP client against the CoinGecko API and the Pydantic models to validate the response.
 
 ---
 
-## Paso 1 — Agregar dependencias al `pyproject.toml`
+## Step 1 — Add dependencies to `pyproject.toml`
 
-Abrir `pyproject.toml` y bajo `[project.dependencies]` agregar:
+Open `pyproject.toml` and under `[project.dependencies]` add:
 
 ```toml
-[project.dependencies]
-httpx = ">=0.27"
-pydantic = ">=2.0"
+[project]
+dependencies = [
+    "httpx>=0.27",
+    "pydantic>=2.0",
+]
 ```
 
-Luego instalar:
+Then install:
 
 ```bash
 pip install -e ".[dev]"
 ```
 
-**Verificación**:
+**Verification**:
 ```bash
 python -c "import httpx, pydantic; print('OK')"
 # → OK
@@ -29,21 +31,21 @@ python -c "import httpx, pydantic; print('OK')"
 
 ---
 
-## Paso 2 — Crear el modelo Pydantic `PriceRecord`
+## Step 2 — Create the Pydantic model `PriceRecord`
 
-Archivo: `src/models/price_record.py`
+File: `src/models/price_record.py`
 
-El modelo debe representar un registro de precio de una crypto con los campos:
-- `coin_id: str` — identificador de CoinGecko (ej: `"bitcoin"`)
-- `symbol: str` — símbolo del activo (ej: `"btc"`)
-- `name: str` — nombre legible
-- `current_price: float` — precio actual en USD
+The model must represent a crypto price record with the fields:
+- `coin_id: str` — CoinGecko identifier (e.g. `"bitcoin"`)
+- `symbol: str` — asset ticker (e.g. `"btc"`)
+- `name: str` — human-readable name
+- `current_price: float` — current price in USD
 - `market_cap: float`
 - `total_volume: float`
-- `price_change_24h: float | None` — puede ser nulo
-- `fetched_at: datetime` — timestamp de extracción (UTC)
+- `price_change_24h: float | None` — can be null
+- `fetched_at: datetime` — extraction timestamp (UTC)
 
-**Verificación**:
+**Verification**:
 ```bash
 python -c "
 from src.models.price_record import PriceRecord
@@ -54,22 +56,22 @@ r = PriceRecord(coin_id='bitcoin', symbol='btc', name='Bitcoin',
                 fetched_at=datetime.now(timezone.utc))
 print(r.model_dump())
 "
-# → debe imprimir el dict con todos los campos
+# → should print the dict with all fields
 ```
 
 ---
 
-## Paso 3 — Crear el extractor `CoinGeckoExtractor`
+## Step 3 — Create the extractor `CoinGeckoExtractor`
 
-Archivo: `src/extractors/coingecko.py`
+File: `src/extractors/coingecko.py`
 
-La clase debe:
-- Usar `httpx.Client` para hacer GET a `https://api.coingecko.com/api/v3/coins/markets`
-- Aceptar parámetros: `vs_currency="usd"`, `ids: list[str]`
-- Retornar una lista de `PriceRecord` validados por Pydantic
-- Manejar errores HTTP con `response.raise_for_status()`
+The class must:
+- Use `httpx.Client` to perform GET requests to `https://api.coingecko.com/api/v3/coins/markets`
+- Accept parameters: `vs_currency="usd"`, `ids: list[str]`
+- Return a list of `PriceRecord` objects validated by Pydantic
+- Handle HTTP errors with `response.raise_for_status()`
 
-**Verificación** (requiere conexión a internet):
+**Verification** (requires internet connection):
 ```bash
 python -c "
 from src.extractors.coingecko import CoinGeckoExtractor
@@ -78,22 +80,22 @@ records = ext.fetch(['bitcoin', 'ethereum'])
 for r in records:
     print(r.coin_id, r.current_price)
 "
-# → bitcoin  <precio>
-# → ethereum <precio>
+# → bitcoin  <price>
+# → ethereum <price>
 ```
 
 ---
 
-## Paso 4 — Escribir los tests unitarios
+## Step 4 — Write unit tests
 
-Archivo: `tests/unit/test_extractor.py`
+File: `tests/unit/test_extractor.py`
 
-Tests con mock (sin llamadas reales a la API):
-- `test_fetch_returns_price_records` — mock de `httpx`, verifica que retorna lista de `PriceRecord`
-- `test_fetch_handles_null_price_change` — verifica que `price_change_24h=None` no rompe la validación
-- `test_fetch_raises_on_http_error` — verifica que un 429/500 levanta excepción
+Mocked tests (without real API calls):
+- `test_fetch_returns_price_records` — mocks `httpx`, verifies it returns a list of `PriceRecord`
+- `test_fetch_handles_null_price_change` — verifies `price_change_24h=None` doesn't break validation
+- `test_fetch_raises_on_http_error` — verifies a 429/500 raises an exception
 
-**Verificación**:
+**Verification**:
 ```bash
 pytest tests/unit/test_extractor.py -v
 # → 3 passed
@@ -101,14 +103,14 @@ pytest tests/unit/test_extractor.py -v
 
 ---
 
-## Paso 5 — Lint y formato
+## Step 5 — Lint and format
 
 ```bash
 ruff check src/extractors/ src/models/ tests/unit/test_extractor.py
 ruff format src/extractors/ src/models/ tests/unit/test_extractor.py
 ```
 
-**Verificación**:
+**Verification**:
 ```bash
 ruff check src/ tests/
 # → All checks passed.
@@ -116,7 +118,7 @@ ruff check src/ tests/
 
 ---
 
-## Paso 6 — Commit y push
+## Step 6 — Commit and push
 
 ```bash
 git add pyproject.toml src/models/price_record.py src/extractors/coingecko.py tests/unit/test_extractor.py docs/issue_1_coingecko_extractor.md
@@ -124,20 +126,14 @@ git commit -m "feat: CoinGecko extractor and PriceRecord Pydantic model"
 git push origin feature/issue-1-coingecko-extractor
 ```
 
-**Verificación**:
-```bash
-git log --oneline -3
-# → el commit aparece en el tope
-```
-
 ---
 
-## Paso 7 — Crear el PR y cerrar el issue
+## Step 7 — Create PR and close the issue
 
 ```bash
 gh pr create \
-  --title "feat: Issue #1 — CoinGecko extractor + modelos Pydantic" \
-  --body "Closes #1. Implementa CoinGeckoExtractor con httpx y modelo PriceRecord con Pydantic v2." \
+  --title "feat: Issue #1 — CoinGecko extractor + Pydantic models" \
+  --body "Closes #1. Implements CoinGeckoExtractor with httpx and PriceRecord model with Pydantic v2." \
   --base main \
   --head feature/issue-1-coingecko-extractor
 
