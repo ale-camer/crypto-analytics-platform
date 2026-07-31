@@ -39,6 +39,7 @@ terraform.tfvars
 application_default_credentials.json
 
 # --- Airflow ---
+.airflow/
 airflow.cfg
 airflow.db
 logs/

@@ -1,7 +1,7 @@
 # 🪙 Crypto Analytics Platform
 
-> **P-02** — Pipeline de analytics de criptomonedas con **Polars**, **GCP BigQuery**, **Apache Airflow** y **Terraform**.
-> Estado: ✅ Finalizado v1.0
+> **P-02** — Cryptocurrency analytics pipeline with **Polars**, **GCP BigQuery**, **Apache Airflow**, and **Terraform**.
+> Status: ✅ Completed v1.0
 
 [![Python](https://img.shields.io/badge/Python-3.12+-blue?logo=python)](https://python.org)
 [![Polars](https://img.shields.io/badge/Polars-🐻‍❄️-orange)](https://pola.rs)
@@ -11,95 +11,97 @@
 
 ---
 
-## 📋 Descripción
+## 📋 Description
 
-Este proyecto es un pipeline de datos (ETL) automatizado, end-to-end, construido para la extracción, transformación y análisis diario de precios e indicadores de criptomonedas. Está diseñado con un enfoque fuerte en **resiliencia**, **escalabilidad** y **procesamiento en memoria de alto rendimiento**.
+This project is an automated, end-to-end data pipeline (ETL) built for the daily extraction, transformation, and analysis of cryptocurrency prices and indicators. It is designed with a strong focus on **resilience**, **scalability**, and **high-performance in-memory processing**.
 
-El pipeline orquesta diariamente la ingesta desde APIs públicas (como CoinGecko), calcula indicadores técnicos (MACD, RSI, Bandas de Bollinger) utilizando **Polars**, archiva un backup inmutable en formato JSON en **Google Cloud Storage (GCS)**, y realiza el volcado analítico final en **Google BigQuery**.
+The pipeline orchestrates daily ingestion from public APIs (such as CoinGecko), calculates technical indicators (MACD, RSI, Bollinger Bands) using **Polars**, archives an immutable backup in JSON format on **Google Cloud Storage (GCS)**, and performs the final analytical load into **Google BigQuery**.
 
 ---
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 ```mermaid
 graph TD
-    A[APIs Externas<br/>CoinGecko] -->|Extract| B(Airflow DAG<br/>TaskFlow API)
-    B -->|XCom| C{Transformación<br/>Polars}
-    B -.->|Backup Resiliente| D[Google Cloud Storage<br/>Raw JSON Archive]
+    A[External APIs<br/>CoinGecko] -->|Extract| B(Airflow DAG<br/>TaskFlow API)
+    B -->|XCom| C{Transformation<br/>Polars}
+    B -.->|Resilient Backup| D[Google Cloud Storage<br/>Raw JSON Archive]
     C -->|Load| E[(BigQuery<br/>Data Warehouse)]
 ```
 
-> Arquitectura detallada, ADRs y decisiones técnicas: [docs/architecture.md](docs/architecture.md)
+> Detailed architecture, ADRs, and technical decisions: [docs/architecture.md](docs/architecture.md)
 
 ---
 
-## 🚀 Quickstart (Ejecución Local)
+## 🚀 Quickstart (Local Execution)
 
-Para ejecutar este proyecto en tu entorno local con pruebas unitarias o de integración:
+To run this project in your local environment with unit or integration tests:
 
 ```bash
-# 1. Clonar el repositorio
-git clone https://github.com/tu-usuario/crypto-analytics-platform.git
+# 1. Clone the repository
+git clone https://github.com/your-username/crypto-analytics-platform.git
 cd crypto-analytics-platform
 
-# 2. Crear y activar el entorno virtual (OBLIGATORIO)
+# 2. Create and activate the virtual environment (REQUIRED)
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 3. Instalar las dependencias (incluyendo de desarrollo)
+# 3. Install dependencies (including dev)
 pip install -e ".[dev]"
 
-# 4. Variables de entorno
+# 4. Environment Variables
 cp .env.example .env
-# Editá .env y configurá tu GCP_PROJECT_ID y GOOGLE_APPLICATION_CREDENTIALS
+# Edit .env and configure your GCP_PROJECT_ID and GOOGLE_APPLICATION_CREDENTIALS
 ```
 
-Para probar el pipeline completo (mockeado sin base de datos local):
+### Running Airflow Locally
+To see the Airflow UI and run the DAG manually:
 ```bash
-pytest tests/integration/test_pipeline_e2e.py -v
+airflow standalone
 ```
+*Then open `http://localhost:8080` in your browser.*
 
 ---
 
-## 🏆 Milestones Logrados
+## 🏆 Milestones Achieved
 
-El proyecto fue construido en 3 fases iterativas utilizando GitFlow:
+The project was built in 3 iterative phases using GitFlow:
 
-1. **Fase 1: Extracción y Transformación**
-   - Creación del conector HTTP a CoinGecko.
-   - Validación robusta de esquemas de datos usando **Pydantic v2**.
-   - Motor de transformación con **Polars** para cálculos financieros ultrarrápidos.
+1. **Phase 1: Extraction & Transformation**
+   - HTTP connector for CoinGecko.
+   - Robust schema validation using **Pydantic v2**.
+   - Transformation engine using **Polars** for lightning-fast financial calculations.
 
-2. **Fase 2: Data Warehouse & Orquestación**
-   - Infraestructura como código (IaC) en GCP mediante **Terraform**.
-   - Implementación de loaders y upserts automáticos hacia BigQuery.
-   - Diseño del DAG utilizando la moderna **TaskFlow API de Apache Airflow 3.x**.
-   - Implementación de E2E integration tests usando `dag.test()`.
+2. **Phase 2: Data Warehouse & Orchestration**
+   - Infrastructure as Code (IaC) on GCP using **Terraform**.
+   - Implementation of loaders and automatic upserts to BigQuery.
+   - DAG design using the modern **Apache Airflow 3.x TaskFlow API**.
+   - E2E integration tests using `dag.test()`.
 
-3. **Fase 3: Fallback Archive & Resiliencia**
-   - Creación de un `GCSLoader` resiliente para el almacenamiento crudo.
-   - Manejo exhaustivo de excepciones y conexión con el sistema de *Logging* de Airflow (evitando caídas del DAG ante errores de conexión GCS).
+3. **Phase 3: Fallback Archive & Resilience**
+   - Resilient `GCSLoader` for raw storage.
+   - Comprehensive exception handling and Airflow logging connection (preventing DAG failures due to GCS connection errors).
 
 ---
 
-## 📁 Estructura Principal
+## 📁 Project Structure
 
 ```text
 crypto-analytics-platform/
-├── pyproject.toml      # Dependencias y configuración
+├── pyproject.toml      # Dependencies and config
 ├── src/
-│   ├── extractors/     # Conectores HTTP a APIs
-│   ├── transformers/   # Lógica Polars
-│   ├── loaders/        # Loaders GCS y BigQuery
+│   ├── extractors/     # HTTP Connectors
+│   ├── transformers/   # Polars logic
+│   ├── loaders/        # GCS and BigQuery loaders
 │   ├── models/         # Pydantic models
-│   └── dags/           # DAGs de Airflow (crypto_daily_pipeline.py)
+│   └── dags/           # Airflow DAGs (crypto_daily_pipeline.py)
 ├── tests/
 │   ├── unit/           # DAG Validation, GCSLoader tests
 │   └── integration/    # E2E pipeline tests
-├── infra/              # Terraform para GCP
-└── docs/               # Architecture ADRs y bitácoras
+├── infra/              # Terraform scripts for GCP
+└── docs/               # Architecture ADRs and issue logs
 ```
 
 ---
 
-*Portfolio de Data/AI Engineering — Alejandro Camerlengo*
+*Data/AI Engineering Portfolio — Alejandro Camerlengo*
